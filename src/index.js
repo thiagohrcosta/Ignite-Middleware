@@ -24,14 +24,24 @@ function checksExistsUserAccount(request, response, next) {
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  if (!user.pro && user.todos.length >= 10) {
+    return response.status(403).json({ error: 'Free plan limit exceeded' });
+  }
+
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
   const { user } = request;
   const { id } = request.params;
 
-  const todo = user.todos.find((todo) => todo.id === id);
+  if (!validate(id)) {
+    return response.status(400).json({ error: 'Invalid todo ID' });
+  }
+
+  const todo = user?.todos?.find((todo) => todo.id === id);
 
   if (!todo) {
     return response.status(404).json({ error: 'Todo not found' });
