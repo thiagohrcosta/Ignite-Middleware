@@ -24,22 +24,42 @@ function checksExistsUserAccount(request, response, next) {
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  if (!user.pro && user.todos.length >= 10) {
+    return response.status(403).json({ error: 'Free plan limit exceeded' });
+  }
+
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-  const { user } = request;
+  const { username } = request.headers;
   const { id } = request.params;
+
+  const user = users.find((user) => user.username === username);
+
+  if (!user) return response.status(404).json({ 
+    error: 'User not found' 
+  });
+  
+  const idIsUuid = validate(id);
+
+  if (!idIsUuid) 
+    return response.status(400).json({
+       error: 'Id must be a valid uuid' 
+    });
 
   const todo = user.todos.find((todo) => todo.id === id);
 
-  if (!todo) {
-    return response.status(404).json({ error: 'Todo not found' });
-  }
+  if (!todo) return response.status(404).json({ 
+    error: 'Todo not found' 
+  });
 
+  request.user = user;
   request.todo = todo;
 
-  return next();
+  next();
 }
 
 function findUserById(request, response, next) {
